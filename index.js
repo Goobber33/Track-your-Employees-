@@ -1,5 +1,5 @@
 const inquirer = require('inquirer');
-const database = require('./lib/database');
+const database = require('./db/database');
 const logo = require ("asciiart-logo");
 const logoText = logo({ name: "Track your Employees!" }).render();
 
