@@ -1,30 +1,38 @@
+// Require the necessary modules
+
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const consoleTable = require('console.table');
 require('dotenv').config();
 
-const connection = mysql.createConnection({
+// Create a MySQL connection taken from my .env file
+
+const dbConnection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME
 });
 
+// Function to view all departments in the database
+
 function viewDepartments() {
-  connection.query(
+  dbConnection.query(
     'SELECT * FROM departments',
-    function(err, res) {
+    function (err, res) {
       if (err) throw err;
       console.table(res);
       mainMenu();
     }
   );
 }
+
+// Function to view all roles in the database
 
 function viewRoles() {
-  connection.query(
+  dbConnection.query(
     'SELECT * FROM roles',
-    function(err, res) {
+    function (err, res) {
       if (err) throw err;
       console.table(res);
       mainMenu();
@@ -32,16 +40,20 @@ function viewRoles() {
   );
 }
 
+// Function to view all employees in the database
+
 function viewEmployees() {
-  connection.query(
+  dbConnection.query(
     'SELECT * FROM employees',
-    function(err, res) {
+    function (err, res) {
       if (err) throw err;
       console.table(res);
       mainMenu();
     }
   );
 }
+
+// Function to add a new department to the database
 
 function addDepartment() {
   inquirer
@@ -50,13 +62,13 @@ function addDepartment() {
       type: 'input',
       message: 'Enter the name of the department:'
     })
-    .then(function(answer) {
-      connection.query(
+    .then(function (answer) {
+      dbConnection.query(
         'INSERT INTO departments SET ?',
         {
           name: answer.name
         },
-        function(err) {
+        function (err) {
           if (err) throw err;
           console.log(`Added department: ${answer.name}`);
           mainMenu();
@@ -64,6 +76,8 @@ function addDepartment() {
       );
     });
 }
+
+// Function to add a new role to the database
 
 function addRole() {
   inquirer
@@ -84,15 +98,15 @@ function addRole() {
         message: 'Enter the department id for the role:'
       }
     ])
-    .then(function(answers) {
-      connection.query(
+    .then(function (answers) {
+      dbConnection.query(
         'INSERT INTO roles SET ?',
         {
           title: answers.title,
           salary: answers.salary,
           department_id: answers.department_id
         },
-        function(err) {
+        function (err) {
           if (err) throw err;
           console.log(`Added role: ${answers.title}`);
           mainMenu();
@@ -100,6 +114,8 @@ function addRole() {
       );
     });
 }
+
+// Function to add a new employee to the database
 
 function addEmployee() {
   inquirer
@@ -125,8 +141,8 @@ function addEmployee() {
         message: 'Enter the manager id for the employee (null if no manager):'
       }
     ])
-    .then(function(answers) {
-      connection.query(
+    .then(function (answers) {
+      dbConnection.query(
         'INSERT INTO employees SET ?',
         {
           first_name: answers.first_name,
@@ -134,7 +150,7 @@ function addEmployee() {
           role_id: answers.role_id,
           manager_id: answers.manager_id
         },
-        function(err) {
+        function (err) {
           if (err) throw err;
           console.log(`Added employee: ${answers.first_name} ${answers.last_name}`);
           mainMenu();
@@ -142,32 +158,37 @@ function addEmployee() {
       );
     });
 }
+
+// Function to update an employee's role in the database
+
 function updateEmployeeRole() {
-    inquirer
-        .prompt([
-            {
-                name: 'employee_id',
-                type: 'input',
-                message: 'Enter the id of the employee to update:'
-            },
-            {
-                name: 'role_id',
-                type: 'input',
-                message: 'Enter the new role id for the employee:'
-            }
-        ])
-        .then(function (answers) {
-            connection.query(
-                'UPDATE employees SET role_id = ? WHERE id = ?',
-                [answers.role_id, answers.employee_id],
-                function (err) {
-                    if (err) throw err;
-                    console.log(`Updated employee role`);
-                    mainMenu();
-                }
-            );
-        });
+  inquirer
+    .prompt([
+      {
+        name: 'employee_id',
+        type: 'input',
+        message: 'Enter the id of the employee to update:'
+      },
+      {
+        name: 'role_id',
+        type: 'input',
+        message: 'Enter the new role id for the employee:'
+      }
+    ])
+    .then(function (answers) {
+      connection.query(
+        'UPDATE employees SET role_id = ? WHERE id = ?',
+        [answers.role_id, answers.employee_id],
+        function (err) {
+          if (err) throw err;
+          console.log(`Updated employee role`);
+          mainMenu();
+        }
+      );
+    });
 }
+
+// Function to display the main menu and prompt the user for their selection
 
 function mainMenu() {
   inquirer
@@ -186,13 +207,11 @@ function mainMenu() {
         'Exit'
       ]
     })
-    .then(function(answer) {
+    .then(function (answer) {
       switch (answer.action) {
         case 'View all departments':
           viewDepartments();
-          break;
-
-        case 'View all roles':
+          break; case 'View all roles':
           viewRoles();
           break;
 
@@ -217,20 +236,22 @@ function mainMenu() {
           break;
 
         case 'Exit':
-          connection.end();
+          dbConnection.end();
           break;
       }
     });
 }
 
+// Export the functions and the database connection for use in other modules
 
 module.exports = {
-    connection,
-    viewDepartments,
-    viewRoles,
-    viewEmployees,
-    addDepartment,
-    addRole,
-    addEmployee,
-    updateEmployeeRole
+  dbConnection,
+  viewDepartments,
+  viewRoles,
+  viewEmployees,
+  addDepartment,
+  addRole,
+  addEmployee,
+  updateEmployeeRole
 };
+
