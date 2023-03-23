@@ -27,8 +27,6 @@ Screenshots of the code
 
 ![second](images/second.jpg)
 
-![third](images/third.jpg)
-
 # Credits
 
 This application was built from scratch by Kyle Parks.
