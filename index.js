@@ -1,5 +1,9 @@
 const inquirer = require('inquirer');
 const database = require('./lib/database');
+const logo = require ("asciiart-logo");
+const logoText = logo({ name: "Track your Employees!" }).render();
+
+console.log(logoText);
 
 function mainMenu() {
   inquirer
