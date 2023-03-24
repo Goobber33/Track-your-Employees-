@@ -31,7 +31,7 @@ function viewDepartments() {
 
 function viewRoles() {
   dbConnection.query(
-    'SELECT * FROM roles',
+    'SELECT roles.id, roles.title, departments.name AS department, FORMAT(roles.salary, 0) AS salary FROM roles JOIN departments ON roles.department_id = departments.id ORDER BY roles.id;',
     function (err, res) {
       if (err) throw err;
       console.table(res);
