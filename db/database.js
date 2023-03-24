@@ -55,8 +55,8 @@ function viewEmployees() {
       if (err) throw err;
 
       // Replace empty manager names with null
-      
-      res.forEach(function(employee) {
+
+      res.forEach(function (employee) {
         if (employee.manager === '') {
           employee.manager = 'null';
         }
@@ -94,39 +94,49 @@ function addDepartment() {
 // Function to add a new role to the database
 
 function addRole() {
-  inquirer
-    .prompt([
-      {
-        name: 'title',
-        type: 'input',
-        message: 'Enter the title of the role:'
-      },
-      {
-        name: 'salary',
-        type: 'input',
-        message: 'Enter the salary for the role:'
-      },
-      {
-        name: 'department_id',
-        type: 'input',
-        message: 'Enter the department id for the role:'
-      }
-    ])
-    .then(function (answers) {
-      dbConnection.query(
-        'INSERT INTO roles SET ?',
+  // First fetch all departments from the database
+  dbConnection.query('SELECT * FROM departments', function (err, departments) {
+    if (err) throw err;
+
+    // Prompt the user to select the department for the new role
+    inquirer
+      .prompt([
         {
-          title: answers.title,
-          salary: answers.salary,
-          department_id: answers.department_id
+          name: 'title',
+          type: 'input',
+          message: 'Enter the title of the role:'
         },
-        function (err) {
-          if (err) throw err;
-          console.log(`Added role: ${answers.title}`);
-          mainMenu();
+        {
+          name: 'salary',
+          type: 'input',
+          message: 'Enter the salary for the role:'
+        },
+        {
+          name: 'department',
+          type: 'list',
+          message: 'Select the department for the role:',
+          choices: departments.map(department => ({
+            name: department.name,
+            value: department.id
+          }))
         }
-      );
-    });
+      ])
+      .then(function (answers) {
+        dbConnection.query(
+          'INSERT INTO roles SET ?',
+          {
+            title: answers.title,
+            salary: answers.salary,
+            department_id: answers.department
+          },
+          function (err) {
+            if (err) throw err;
+            console.log(`Added role: ${answers.title}`);
+            mainMenu();
+          }
+        );
+      });
+  });
 }
 
 // Function to add a new employee to the database
@@ -190,7 +200,7 @@ function updateEmployeeRole() {
       }
     ])
     .then(function (answers) {
-      connection.query(
+      dbConnection.query(
         'UPDATE employees SET role_id = ? WHERE id = ?',
         [answers.role_id, answers.employee_id],
         function (err) {
@@ -200,6 +210,74 @@ function updateEmployeeRole() {
         }
       );
     });
+}
+
+// Function to update an employee's manager in the database
+function updateEmployeeManager() {
+  inquirer
+    .prompt([
+      {
+        name: 'employee_id',
+        type: 'input',
+        message: 'Enter the id of the employee whose manager you want to update:'
+      },
+      {
+        name: 'manager_id',
+        type: 'input',
+        message: 'Enter the new manager id for the employee (null if no manager):'
+      }
+    ])
+    .then(function (answers) {
+      dbConnection.query(
+        'UPDATE employees SET manager_id = ? WHERE id = ?',
+        [answers.manager_id === 'null' ? null : answers.manager_id, answers.employee_id],
+        function (err) {
+          if (err) throw err;
+          console.log(`Updated employee manager`);
+          mainMenu(); // Ensure this line is present
+        }
+      );
+    });
+}
+
+// Function to view employees by manager
+
+function viewEmployeesByManager() {
+  dbConnection.query(
+    `SELECT DISTINCT m.id, CONCAT_WS(" ", m.first_name, m.last_name) AS manager
+    FROM employees 
+    LEFT JOIN employees m ON employees.manager_id = m.id 
+    WHERE m.id IS NOT NULL`,
+    function (err, managers) {
+      if (err) throw err;
+
+      inquirer
+        .prompt({
+          name: 'manager',
+          type: 'list',
+          message: 'Select a manager to view their employees:',
+          choices: managers.map(manager => ({
+            name: manager.manager,
+            value: manager.id
+          }))
+        })
+        .then(function (answer) {
+          dbConnection.query(
+            `SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS department, FORMAT(roles.salary, 0) AS salary 
+            FROM employees 
+            LEFT JOIN roles ON employees.role_id = roles.id 
+            LEFT JOIN departments ON roles.department_id = departments.id 
+            WHERE employees.manager_id = ?`,
+            [answer.manager],
+            function (err, res) {
+              if (err) throw err;
+              console.table(res);
+              mainMenu();
+            }
+          );
+        });
+    }
+  );
 }
 
 // Function to display the main menu and prompt the user for their selection
@@ -218,6 +296,8 @@ function mainMenu() {
         'Add a role',
         'Add an employee',
         'Update an employee role',
+        'Update an employee manager',
+        'View employees by manager',
         'Exit'
       ]
     })
@@ -249,6 +329,14 @@ function mainMenu() {
           updateEmployeeRole();
           break;
 
+        case 'Update an employee manager':
+          updateEmployeeManager();
+          break;
+
+        case 'View employees by manager':
+          viewEmployeesByManager();
+          break;
+
         case 'Exit':
           dbConnection.end();
           break;
@@ -266,6 +354,8 @@ module.exports = {
   addDepartment,
   addRole,
   addEmployee,
-  updateEmployeeRole
+  updateEmployeeRole,
+  updateEmployeeManager,
+  viewEmployeesByManager
 };
 
