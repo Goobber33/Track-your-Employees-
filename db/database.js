@@ -18,7 +18,7 @@ const dbConnection = mysql.createConnection({
 
 function viewDepartments() {
   dbConnection.query(
-    'SELECT * FROM departments',
+    'SELECT id, name FROM departments',
     function (err, res) {
       if (err) throw err;
       console.table(res);
