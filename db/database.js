@@ -44,9 +44,23 @@ function viewRoles() {
 
 function viewEmployees() {
   dbConnection.query(
-    'SELECT * FROM employees',
+    `SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS department, FORMAT(roles.salary, 0) AS salary,
+    CONCAT_WS(" ", m.first_name, m.last_name) AS manager 
+    FROM employees 
+    LEFT JOIN roles ON employees.role_id = roles.id 
+    LEFT JOIN departments ON roles.department_id = departments.id 
+    LEFT JOIN employees m ON employees.manager_id = m.id 
+    ORDER BY employees.id`,
     function (err, res) {
       if (err) throw err;
+
+      // Replace empty manager names with null
+      
+      res.forEach(function(employee) {
+        if (employee.manager === '') {
+          employee.manager = 'null';
+        }
+      });
       console.table(res);
       mainMenu();
     }
