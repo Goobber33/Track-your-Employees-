@@ -14,6 +14,9 @@ const dbConnection = mysql.createConnection({
   database: process.env.DB_NAME
 });
 
+const deleteFunctions = require('./delete');
+const { deleteDepartment, deleteRole, deleteEmployee } = deleteFunctions;
+
 // Function to view all departments in the database
 
 function viewDepartments() {
@@ -139,6 +142,7 @@ function addRole() {
   });
 }
 
+
 // Function to add a new employee to the database
 
 function addEmployee() {
@@ -213,6 +217,7 @@ function updateEmployeeRole() {
 }
 
 // Function to update an employee's manager in the database
+
 function updateEmployeeManager() {
   inquirer
     .prompt([
@@ -280,6 +285,44 @@ function viewEmployeesByManager() {
   );
 }
 
+// Function to view employees by department
+
+function viewEmployeesByDepartment() {
+  dbConnection.query(
+    `SELECT id, name FROM departments`,
+    function (err, departments) {
+      if (err) throw err;
+
+      inquirer
+        .prompt({
+          name: 'department',
+          type: 'list',
+          message: 'Select a department to view its employees:',
+          choices: departments.map(department => ({
+            name: department.name,
+            value: department.id
+          }))
+        })
+        .then(function (answer) {
+          dbConnection.query(
+            `SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS department, FORMAT(roles.salary, 0) AS salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager 
+            FROM employees 
+            LEFT JOIN roles ON employees.role_id = roles.id 
+            LEFT JOIN departments ON roles.department_id = departments.id 
+            LEFT JOIN employees m ON employees.manager_id = m.id 
+            WHERE departments.id = ?`,
+            [answer.department],
+            function (err, res) {
+              if (err) throw err;
+              console.table(res);
+              mainMenu();
+            }
+          );
+        });
+    }
+  );
+}
+
 // Function to display the main menu and prompt the user for their selection
 
 function mainMenu() {
@@ -298,46 +341,58 @@ function mainMenu() {
         'Update an employee role',
         'Update an employee manager',
         'View employees by manager',
-        'Exit'
+        'View employees by department',
+        'Delete a department',
+        'Delete a role',
+        'Delete an employee',
+        'Quit'
       ]
     })
     .then(function (answer) {
+
+      // Call the appropriate function based on the user's selection
+
       switch (answer.action) {
         case 'View all departments':
           viewDepartments();
-          break; case 'View all roles':
+          break;
+        case 'View all roles':
           viewRoles();
           break;
-
         case 'View all employees':
           viewEmployees();
           break;
-
         case 'Add a department':
           addDepartment();
           break;
-
         case 'Add a role':
           addRole();
           break;
-
         case 'Add an employee':
           addEmployee();
           break;
-
         case 'Update an employee role':
           updateEmployeeRole();
           break;
-
         case 'Update an employee manager':
           updateEmployeeManager();
           break;
-
         case 'View employees by manager':
           viewEmployeesByManager();
           break;
-
-        case 'Exit':
+        case 'View employees by department':
+          viewEmployeesByDepartment();
+          break;
+        case 'Delete a department':
+          deleteDepartment();
+          break;
+        case 'Delete a role':
+          deleteRole();
+          break;
+        case 'Delete an employee':
+          deleteEmployee();
+          break;
+        case 'Quit':
           dbConnection.end();
           break;
       }
@@ -356,6 +411,10 @@ module.exports = {
   addEmployee,
   updateEmployeeRole,
   updateEmployeeManager,
-  viewEmployeesByManager
+  viewEmployeesByManager,
+  viewEmployeesByDepartment,
+  deleteDepartment, // Add this line
+  deleteRole, // Add this line
+  deleteEmployee // Add this line
 };
 

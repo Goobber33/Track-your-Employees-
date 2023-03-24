@@ -1,9 +1,26 @@
 // Require the necessary modules and files
 
-const inquirer = require('inquirer'); // Adds inquirer to promnpt for user input
+const inquirer = require('inquirer'); // Adds inquirer to prompt for user input
 const database = require('./db/database'); // Accessing MySQL Database
 const logo = require("asciiart-logo"); // For creating ASCII art logo
 const logoText = logo({ name: "Track your Employees!" }).render(); // Define the ASCII art logo and store it in a variable
+
+const {
+  viewDepartments,
+  viewRoles,
+  viewEmployees,
+  addDepartment,
+  addRole,
+  addEmployee,
+  updateEmployeeRole,
+  updateEmployeeManager,
+  viewEmployeesByManager,
+  viewEmployeesByDepartment,
+  deleteDepartment,
+  deleteRole,
+  deleteEmployee
+} = require('./db/database');
+
 
 console.log(logoText); // Display the ASCII art logo in the console
 
@@ -23,6 +40,12 @@ function mainMenu() {
         'Add a role',
         'Add an employee',
         'Update an employee role',
+        'Update an employee manager',
+        'View employees by manager',
+        'View employees by department',
+        'Delete a department',
+        'Delete a role',
+        'Delete an employee',
         'Quit'
       ]
     })
@@ -32,28 +55,46 @@ function mainMenu() {
 
       switch (answer.action) {
         case 'View all departments':
-          database.viewDepartments();
+          viewDepartments();
           break;
         case 'View all roles':
-          database.viewRoles();
+          viewRoles();
           break;
         case 'View all employees':
-          database.viewEmployees();
+          viewEmployees();
           break;
         case 'Add a department':
-          database.addDepartment();
+          addDepartment();
           break;
         case 'Add a role':
-          database.addRole();
+          addRole();
           break;
         case 'Add an employee':
-          database.addEmployee();
+          addEmployee();
           break;
         case 'Update an employee role':
-          database.updateEmployeeRole();
+          updateEmployeeRole();
+          break;
+        case 'Update an employee manager':
+          updateEmployeeManager();
+          break;
+        case 'View employees by manager':
+          viewEmployeesByManager();
+          break;
+        case 'View employees by department':
+          viewEmployeesByDepartment();
+          break;
+        case 'Delete a department':
+          deleteDepartment();
+          break;
+        case 'Delete a role':
+          deleteRole();
+          break;
+        case 'Delete an employee':
+          deleteEmployee();
           break;
         case 'Quit':
-          database.connection.end();
+          dbConnection.end();
           break;
       }
     });
