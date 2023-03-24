@@ -15,7 +15,7 @@ To install this project, clone the repository from GitHub and open it in your ow
 
 # Video
 
-https://drive.google.com/file/d/1zdnbUMM2cVJqWIVUWPUWlC_0VRxd6g6S/view
+https://drive.google.com/file/d/1uXeXnjZhRVkP-q76kearQ3HkUuzkGKhy/view
 
 # Usage
 

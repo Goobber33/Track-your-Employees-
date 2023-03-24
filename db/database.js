@@ -383,6 +383,23 @@ function deleteEmployee() {
   });
 }
 
+// Function to view the total utilized budget of a department
+function viewDepartmentBudget(departmentId) {
+  dbConnection.query(
+    `SELECT departments.name AS department, FORMAT(SUM(roles.salary), 0) AS utilized_budget 
+    FROM employees 
+    LEFT JOIN roles ON employees.role_id = roles.id 
+    LEFT JOIN departments ON roles.department_id = departments.id 
+    WHERE departments.id = ?`,
+    [departmentId],
+    function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      mainMenu();
+    }
+  );
+}
+
 // Function to display the main menu and prompt the user for their selection
 
 function mainMenu() {
@@ -405,6 +422,7 @@ function mainMenu() {
         'Delete a department',
         'Delete a role',
         'Delete an employee',
+        'View the total utilized budget of a department',
         'Quit'
       ]
     })
@@ -452,6 +470,22 @@ function mainMenu() {
         case 'Delete an employee':
           deleteEmployee();
           break;
+          case 'View the total utilized budget of a department':
+            dbConnection.query('SELECT * FROM departments', function (err, departments) {
+              if (err) throw err;
+              inquirer.prompt({
+                name: 'department',
+                type: 'list',
+                message: 'Select a department to view its total utilized budget:',
+                choices: departments.map(department => ({
+                  name: department.name,
+                  value: department.id
+                }))
+              }).then(function (answer) {
+                viewDepartmentBudget(answer.department);
+              });
+            });
+            break;
         case 'Quit':
           dbConnection.end();
           break;
